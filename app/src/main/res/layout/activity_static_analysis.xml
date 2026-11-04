@@ -12,7 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        app:cardCornerRadius="16dp">
+        app:cardCornerRadius="20dp"
+        app:cardElevation="2dp">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -46,7 +47,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        app:cardCornerRadius="20dp">
+        app:cardCornerRadius="24dp"
+        app:cardElevation="6dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -59,15 +61,17 @@
                 android:layout_height="wrap_content"
                 android:text="@string/static_label"
                 android:textAppearance="?attr/textAppearanceLabelMedium"
-                android:textColor="?attr/colorPrimary" />
+                android:textColor="?attr/colorPrimary"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvExercise"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 android:text="@string/static_analyzing"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvDetail"
@@ -81,7 +85,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textStyle="medium" />
 
             <Spinner
                 android:id="@+id/spinnerExercise"
@@ -100,18 +105,20 @@
                     android:id="@+id/btnSpeak"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="@string/btn_speak" />
+                    android:text="@string/btn_speak"
+                    app:cornerRadius="16dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnClose"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:text="@string/btn_close" />
+                    android:text="@string/btn_close"
+                    app:cornerRadius="16dp" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
