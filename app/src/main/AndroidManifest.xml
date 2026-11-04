@@ -55,7 +55,10 @@
             android:exported="false"
             android:label="@string/btn_credits"
             android:parentActivityName=".MainActivity" />
-
+        <activity
+            android:name=".RoutineScheduleActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
         <!-- Necesario para pasar la foto de la cámara nativa a la app -->
         <provider
             android:name="androidx.core.content.FileProvider"

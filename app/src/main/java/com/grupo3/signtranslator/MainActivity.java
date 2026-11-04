@@ -168,17 +168,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Reemplaza el método mostrarSelectorDeHora() por este en tu MainActivity:
     private void mostrarSelectorDeHora() {
-        Calendar calendar = Calendar.getInstance();
-        int horaActual = calendar.get(Calendar.HOUR_OF_DAY);
-        int minutoActual = calendar.get(Calendar.MINUTE);
-
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this, (view, horaSeleccionada, minutoSeleccionado) -> {
-            programarAlarmaNotificacion(horaSeleccionada, minutoSeleccionado);
-            Toast.makeText(this, "¡Ronda agendada para las " + String.format("%02d:%02d", horaSeleccionada, minutoSeleccionado) + "!", Toast.LENGTH_LONG).show();
-        }, horaActual, minutoActual, true);
-
-        timePickerDialog.show();
+        Intent intent = new Intent(this, RoutineScheduleActivity.class);
+        startActivity(intent);
     }
 
     private void programarAlarmaNotificacion(int hora, int minuto) {
