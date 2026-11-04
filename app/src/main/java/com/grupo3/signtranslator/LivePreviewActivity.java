@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.hardware.camera2.CameraCharacteristics;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
@@ -44,6 +46,7 @@ import com.grupo3.signtranslator.ui.PoseGraphic;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,6 +72,12 @@ public class LivePreviewActivity extends AppCompatActivity {
     private ExecutorService analysisExecutor;
     private ProcessCameraProvider cameraProvider;
 
+    // Variables para el cronómetro interactivo en vivo
+    private Handler handler;
+    private Runnable runnable;
+    private int segundosTranscurridos = 0;
+    private boolean estaCorriendo = false;
+
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
     private boolean voiceEnabled = true;
     /** null = el ejercicio se detecta solo; de lo contrario, el que eligió el usuario. */
@@ -93,6 +102,10 @@ public class LivePreviewActivity extends AppCompatActivity {
         speechManager = new SpeechManager(this);
         analysisExecutor = Executors.newSingleThreadExecutor();
 
+        // Inicializar Cronómetro
+        handler = new Handler(Looper.getMainLooper());
+        configurarCronometro();
+
         ExerciseSpinner.bind(this, binding.spinnerExercise, this::onManualExerciseChanged);
         binding.btnControls.setOnClickListener(v -> toggleControls());
         binding.btnReset.setOnClickListener(v -> resetCounter());
@@ -108,6 +121,41 @@ public class LivePreviewActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.permission_camera_denied, Toast.LENGTH_LONG).show();
             finish();
         }
+    }
+
+    private void configurarCronometro() {
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                if (estaCorriendo) {
+                    segundosTranscurridos++;
+                    int minutos = segundosTranscurridos / 60;
+                    int segundos = segundosTranscurridos % 60;
+                    String tiempoFormateado = String.format(Locale.getDefault(), "%02d:%02d", minutos, segundos);
+                    binding.tvCronometro.setText(tiempoFormateado);
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        };
+
+        binding.btnStartCronometro.setOnClickListener(v -> {
+            if (!estaCorriendo) {
+                estaCorriendo = true;
+                handler.post(runnable);
+            }
+        });
+
+        binding.btnPauseCronometro.setOnClickListener(v -> {
+            estaCorriendo = false;
+            handler.removeCallbacks(runnable);
+        });
+
+        binding.btnResetCronometro.setOnClickListener(v -> {
+            estaCorriendo = false;
+            handler.removeCallbacks(runnable);
+            segundosTranscurridos = 0;
+            binding.tvCronometro.setText("00:00");
+        });
     }
 
     private void startCamera() {
@@ -327,6 +375,9 @@ public class LivePreviewActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (handler != null && runnable != null) {
+            handler.removeCallbacks(runnable);
+        }
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
         }

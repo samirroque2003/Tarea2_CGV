@@ -1,9 +1,16 @@
 package com.grupo3.signtranslator;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +27,7 @@ import com.grupo3.signtranslator.util.ThemeManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 
 /** Menú principal: cámara en vivo, foto con la cámara nativa o imagen/video de la galería. */
 public class MainActivity extends AppCompatActivity {
@@ -33,6 +41,16 @@ public class MainActivity extends AppCompatActivity {
                     openLivePreview();
                 } else {
                     Toast.makeText(this, R.string.permission_camera_denied, Toast.LENGTH_LONG).show();
+                }
+            });
+
+    /** Lanzador para solicitar permiso de notificaciones en Android 13+ (API 33+) */
+    private final ActivityResultLauncher<String> notificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) {
+                    mostrarSelectorDeHora();
+                } else {
+                    Toast.makeText(this, "Se requiere el permiso de notificaciones para agendar la ronda", Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -66,6 +84,10 @@ public class MainActivity extends AppCompatActivity {
         binding.btnCapture.setOnClickListener(v -> takePhoto());
         binding.btnGallery.setOnClickListener(v ->
                 pickMediaLauncher.launch(new String[]{"image/*", "video/*"}));
+
+        // Conexión del botón para agendar ronda validando primero el permiso de notificación
+        binding.btnSchedule.setOnClickListener(v -> verificarPermisoNotificacion());
+
         binding.btnTips.setOnClickListener(v ->
                 startActivity(new Intent(this, TipsActivity.class)));
         binding.btnCredits.setOnClickListener(v ->
@@ -126,5 +148,78 @@ public class MainActivity extends AppCompatActivity {
         // Permite a la actividad leer el archivo concedido por la cámara o la galería
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivity(intent);
+    }
+
+    // =======================================================
+    // MÉTODOS PARA VERIFICAR PERMISO Y AGENDAR LA RONDA
+    // =======================================================
+    private void verificarPermisoNotificacion() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            boolean granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (granted) {
+                mostrarSelectorDeHora();
+            } else {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        } else {
+            // En versiones anteriores a Android 13, no se requiere permiso en tiempo de ejecución
+            mostrarSelectorDeHora();
+        }
+    }
+
+    private void mostrarSelectorDeHora() {
+        Calendar calendar = Calendar.getInstance();
+        int horaActual = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutoActual = calendar.get(Calendar.MINUTE);
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, (view, horaSeleccionada, minutoSeleccionado) -> {
+            programarAlarmaNotificacion(horaSeleccionada, minutoSeleccionado);
+            Toast.makeText(this, "¡Ronda agendada para las " + String.format("%02d:%02d", horaSeleccionada, minutoSeleccionado) + "!", Toast.LENGTH_LONG).show();
+        }, horaActual, minutoActual, true);
+
+        timePickerDialog.show();
+    }
+
+    private void programarAlarmaNotificacion(int hora, int minuto) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "EjerciciosChannel";
+            String description = "Canal para recordatorios de rutinas";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel("canal_ejercicios", name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, AlarmaReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hora);
+        calendar.set(Calendar.MINUTE, minuto);
+        calendar.set(Calendar.SECOND, 0);
+
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        if (alarmManager != null) {
+            try {
+                alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.getTimeInMillis(),
+                        pendingIntent
+                );
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

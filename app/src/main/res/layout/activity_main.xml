@@ -96,6 +96,20 @@
             app:icon="@android:drawable/ic_menu_gallery"
             app:iconGravity="textStart" />
 
+        <!-- Botón añadido para Agendar Ronda mediante Notificaciones -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSchedule"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="12dp"
+            android:text="Agendar Ronda (Recordatorio)"
+            app:cornerRadius="20dp"
+            app:strokeColor="@color/app_border"
+            app:strokeWidth="1.5dp"
+            app:icon="@android:drawable/ic_menu_agenda"
+            app:iconGravity="textStart" />
+
         <!-- Ayuda e información -->
         <TextView
             android:layout_width="wrap_content"
